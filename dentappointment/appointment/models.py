@@ -17,7 +17,8 @@ class Owner(AbstractUser,PermissionsMixin):
     REQUIRED_FIELDS = ['username']
     
 
-class ConsultingRoom(CreateRegisBase):
+class ConsultingRoom(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100,null=False,default='')
     id_owner = models.ForeignKey(Owner, null=True, on_delete=models.CASCADE)
     address = models.CharField(max_length=300)
@@ -25,6 +26,8 @@ class ConsultingRoom(CreateRegisBase):
     email =  models.EmailField(null=True)
     phone_number = models.CharField(max_length=10,null=True)
     qr_code = models.ImageField(upload_to='consultingroom-qrcodes/', null=True)
+    date_created =  models.DateTimeField(default=timezone.now)
+    date_updated =  models.DateTimeField(default=timezone.now)
     def __str__(self):
         return self.name
 
@@ -33,7 +36,8 @@ class Patient(CreateRegisBase):
     Last_name = models.CharField(max_length=100)
     Second_last_name = models.CharField(max_length=100,blank=True)
     Eage = models.CharField(max_length=100,blank=True)
-    Gender = models.CharField(max_length=100)
+    Birth_date = models.DateField(null=True, blank=True)
+    Gender = models.CharField(max_length=100,blank=True)
     Email = models.EmailField(blank=True)
     PhoneNumber =  models.CharField(max_length=100,unique=True)
     id_consultingRoom = models.ForeignKey(ConsultingRoom, null=True, on_delete=models.CASCADE)
@@ -51,7 +55,8 @@ class Service(CreateRegisBase):
 
 class Treatment(CreateRegisBase):
     id_patient = models.ForeignKey(Patient, null=True, on_delete=models.CASCADE)
-    id_service = models.ForeignKey(Service, null=True, on_delete=models.CASCADE)
+    # id_service = models.ForeignKey(Service, null=True, on_delete=models.CASCADE)
+    services = models.ManyToManyField(Service)
     date= models.DateField(null=True,db_comment="Fecha en la que el tratamiento normal fue entregado/realizado")
     note =  models.CharField(null=True,max_length=100)
     dental_aucense = models.CharField(null=True,max_length=100,)

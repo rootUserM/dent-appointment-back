@@ -17,33 +17,44 @@ class ServiceSerializer(serializers.ModelSerializer):
         fields = '__all__'
         
 class TreatmentSerializer(serializers.ModelSerializer):
-    service_info = ServiceSerializer(source='id_service',read_only=True)
     payment_info = serializers.SerializerMethodField()
+    services = serializers.PrimaryKeyRelatedField(queryset=Service.objects.all(), many=True)
     class Meta:
         model=Treatment
-        fields = '__all__'
+        fields = [
+            'id', 'id_patient', 'services', 'date', 'note', 'dental_aucense', 'conserved_teeth', 
+            'absence_teeth', 'teeth_to_replace', 'prosthesis_type', 'prosthesis_description', 
+            'observations', 'updated_price', 'prosthesis_procedure','payment_info'
+        ]
     
     def get_payment_info(self, obj):
         payments = Payment.objects.filter(id_treatment=obj.id)
         payments_serializer =  PaymentSerializer(payments, many= True)
         total = sum(float(payment.contribution) for payment in payments)
         payment_status ={}
+        payment_status['name_services']=[service.name for service in obj.services.all()]
+        payment_status['total_amount_service'] = sum(service.price for service in obj.services.all())
         payment_status['total_paid'] = total
-        payment_status['total_debt'] = obj.id_service.price - total
+        payment_status['total_debt'] = sum(service.price for service in obj.services.all()) - total
         payment_status['payments_list'] = payments_serializer.data
         return payment_status
     
+    def create(self, validated_data):
+        services = validated_data.pop('services')
+        treatment = Treatment.objects.create(**validated_data)
+        treatment.services.set(services)
+        return treatment
+        
+    
 class PaymentSerializer(serializers.ModelSerializer):
-    treatment_service_name = serializers.SerializerMethodField()
+    # treatment_service_name = serializers.SerializerMethodField()
     class Meta:
         model =  Payment
         fields = '__all__'
-    def get_treatment_service_name(self, obj):
-        # Query to fetch the treatment related to the payment
-        treatment = Treatment.objects.select_related('id_service').get(id=obj.id_treatment.id)
-        # Access the service name
-        service_name = treatment.id_service.name if treatment.id_service else None
-        return service_name
+    # def get_treatment_service_name(self, obj):
+    #     treatment = Treatment.objects.select_related('servicea').get(id=obj.id_treatment.id)
+    #     service_name = treatment.services.name if treatment.services else None
+    #     return service_name
 
 
 class AppointmetSerializer(serializers.ModelSerializer):
