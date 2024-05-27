@@ -55,10 +55,9 @@ class Service(CreateRegisBase):
 
 class Treatment(CreateRegisBase):
     id_patient = models.ForeignKey(Patient, null=True, on_delete=models.CASCADE)
-    # id_service = models.ForeignKey(Service, null=True, on_delete=models.CASCADE)
     services = models.ManyToManyField(Service)
     date= models.DateField(null=True,db_comment="Fecha en la que el tratamiento normal fue entregado/realizado")
-    note =  models.CharField(null=True,max_length=100)
+    note =  models.CharField(null=True,max_length=1000)
     dental_aucense = models.CharField(null=True,max_length=100,)
     conserved_teeth = models.CharField(null=True,max_length=100)
     absence_teeth = models.CharField(null=True,max_length=100)
